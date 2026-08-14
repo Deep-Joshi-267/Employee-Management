@@ -47,7 +47,7 @@ app.post('/api/employees', async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
-    const values = [emp_id, name, email, phone, position, parseFloat(salary), date_of_joining];
+    const values = [emp_id, name, email, phone, position, department, parseFloat(salary), date_of_joining];
     const result = await db.query(queryText, values);
     res.status(201).json({ message: 'Employee added successfully', employee: result.rows[0] });
   } catch (error) {

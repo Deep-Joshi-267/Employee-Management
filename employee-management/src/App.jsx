@@ -32,16 +32,24 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   // Form State for Add Employee
-  const [formData, setFormData] = useState({
-    emp_id: '',
-    name: '',
-    email: '',
-    phone: '',
-    position: '',
-    department: '',
-    salary: '',
-    date_of_joining: ''
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('ems_add_form_data');
+    return saved ? JSON.parse(saved) : {
+      emp_id: '',
+      name: '',
+      email: '',
+      phone: '',
+      position: '',
+      department: '',
+      salary: '',
+      date_of_joining: ''
+    };
   });
+
+  useEffect(() => {
+    localStorage.setItem('ems_add_form_data', JSON.stringify(formData));
+  }, [formData]);
+
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
