@@ -31,6 +31,22 @@ function App() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Pagination State for View Tab (9 cards per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
+
+  const totalPages = Math.ceil(employees.length / ITEMS_PER_PAGE) || 1;
+  const indexOfLastEmployee = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstEmployee = indexOfLastEmployee - ITEMS_PER_PAGE;
+  const currentEmployees = employees.slice(indexOfFirstEmployee, indexOfLastEmployee);
+
+  // Automatically adjust currentPage if totalPages decreases (e.g. after deletion)
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [employees.length, totalPages, currentPage]);
+
   // Form State for Add Employee
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('ems_add_form_data');
@@ -523,75 +539,118 @@ function App() {
                 </button>
               </div>
             ) : (
-              <div className="employees-grid">
-                {employees.map((emp) => (
-                  <div key={emp.id} className="employee-card">
-                    <div className="card-header">
-                      <div className="card-title-group">
-                        <span className="emp-name">{emp.name}</span>
-                        <span className="emp-id-badge">{emp.emp_id}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="card-body">
-                      <div className="info-row">
-                        <Mail className="info-icon" size={14} />
-                        <span className="info-label">Email:</span>
-                        <span className="info-val">{emp.email}</span>
+              <>
+                <div className="employees-grid">
+                  {currentEmployees.map((emp) => (
+                    <div key={emp.id} className="employee-card">
+                      <div className="card-header">
+                        <div className="card-title-group">
+                          <span className="emp-name">{emp.name}</span>
+                          <span className="emp-id-badge">{emp.emp_id}</span>
+                        </div>
                       </div>
                       
-                      <div className="info-row">
-                        <Phone className="info-icon" size={14} />
-                        <span className="info-label">Phone:</span>
-                        <span className="info-val">{emp.phone}</span>
+                      <div className="card-body">
+                        <div className="info-row">
+                          <Mail className="info-icon" size={14} />
+                          <span className="info-label">Email:</span>
+                          <span className="info-val">{emp.email}</span>
+                        </div>
+                        
+                        <div className="info-row">
+                          <Phone className="info-icon" size={14} />
+                          <span className="info-label">Phone:</span>
+                          <span className="info-val">{emp.phone}</span>
+                        </div>
+
+                        <div className="info-row">
+                          <Briefcase className="info-icon" size={14} />
+                          <span className="info-label">Position:</span>
+                          <span className="info-val">{emp.position}</span>
+                        </div>
+
+                        <div className="info-row">
+                          <Layers className="info-icon" size={14} />
+                          <span className="info-label">Dept:</span>
+                          <span className="info-val">{emp.department}</span>
+                        </div>
+
+                        <div className="info-row">
+                          <IndianRupee className="info-icon" size={14} />
+                          <span className="info-label">Salary:</span>
+                          <span className="info-val">{formatSalary(emp.salary)}</span>
+                        </div>
+
+                        <div className="info-row">
+                          <Calendar className="info-icon" size={14} />
+                          <span className="info-label">Joined:</span>
+                          <span className="info-val">
+                            {emp.date_of_joining ? new Date(emp.date_of_joining).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="info-row">
-                        <Briefcase className="info-icon" size={14} />
-                        <span className="info-label">Position:</span>
-                        <span className="info-val">{emp.position}</span>
-                      </div>
-
-                      <div className="info-row">
-                        <Layers className="info-icon" size={14} />
-                        <span className="info-label">Dept:</span>
-                        <span className="info-val">{emp.department}</span>
-                      </div>
-
-                      <div className="info-row">
-                        <IndianRupee className="info-icon" size={14} />
-                        <span className="info-label">Salary:</span>
-                        <span className="info-val">{formatSalary(emp.salary)}</span>
-                      </div>
-
-                      <div className="info-row">
-                        <Calendar className="info-icon" size={14} />
-                        <span className="info-label">Joined:</span>
-                        <span className="info-val">
-                          {emp.date_of_joining ? new Date(emp.date_of_joining).toLocaleDateString() : 'N/A'}
-                        </span>
+                      <div className="card-actions">
+                        <button 
+                          className="card-btn card-btn-edit" 
+                          onClick={() => openEditModal(emp)}
+                        >
+                          <Edit3 size={12} />
+                          Edit
+                        </button>
+                        <button 
+                          className="card-btn card-btn-delete"
+                          onClick={() => handleDelete(emp.emp_id, emp.name)}
+                        >
+                          <Trash2 size={12} />
+                          Delete
+                        </button>
                       </div>
                     </div>
+                  ))}
+                </div>
 
-                    <div className="card-actions">
+                {totalPages > 1 && (
+                  <div className="pagination-container">
+                    <div className="pagination-info">
+                      Showing <strong>{indexOfFirstEmployee + 1}</strong> to <strong>{Math.min(indexOfLastEmployee, employees.length)}</strong> of <strong>{employees.length}</strong> employees
+                    </div>
+                    <div className="pagination-controls">
                       <button 
-                        className="card-btn card-btn-edit" 
-                        onClick={() => openEditModal(emp)}
+                        className="pagination-nav-btn"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        title="Previous Page"
                       >
-                        <Edit3 size={12} />
-                        Edit
+                        <ChevronLeft size={16} />
+                        <span>Previous</span>
                       </button>
+
+                      <div className="pagination-pages">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                          <button
+                            key={pageNum}
+                            className={`pagination-page-btn ${currentPage === pageNum ? 'active' : ''}`}
+                            onClick={() => setCurrentPage(pageNum)}
+                          >
+                            {pageNum}
+                          </button>
+                        ))}
+                      </div>
+
                       <button 
-                        className="card-btn card-btn-delete"
-                        onClick={() => handleDelete(emp.emp_id, emp.name)}
+                        className="pagination-nav-btn"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        title="Next Page"
                       >
-                        <Trash2 size={12} />
-                        Delete
+                        <span>Next</span>
+                        <ChevronRight size={16} />
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </>
         )}
