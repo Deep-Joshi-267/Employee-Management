@@ -22,17 +22,38 @@ import './App.css';
 const API_BASE_URL = 'http://localhost:5000/api';
 
 function App() {
-  // Sidenav controlled state
-  const [isExpanded, setIsExpanded] = useState(true);
-  // Active Tab: 'add' or 'view'
-  const [activeTab, setActiveTab] = useState('add');
+  // Sidenav controlled state (persisted across refreshes)
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('ems_sidebar_expanded');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ems_sidebar_expanded', JSON.stringify(isExpanded));
+  }, [isExpanded]);
+
+  // Active Tab: 'add' or 'view' (persisted across refreshes)
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('ems_active_tab') || 'add';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ems_active_tab', activeTab);
+  }, [activeTab]);
 
   // Employee Data States
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Pagination State for View Tab (9 cards per page)
-  const [currentPage, setCurrentPage] = useState(1);
+  // Pagination State for View Tab (9 cards per page, persisted across refreshes)
+  const [currentPage, setCurrentPage] = useState(() => {
+    const saved = localStorage.getItem('ems_current_page');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ems_current_page', currentPage.toString());
+  }, [currentPage]);
   const ITEMS_PER_PAGE = 9;
 
   const totalPages = Math.ceil(employees.length / ITEMS_PER_PAGE) || 1;
